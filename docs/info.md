@@ -9,12 +9,25 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-Explain how your project works
+KK ChipSynth is a Tiny Tapeout custom chip synthesizer project inspired by
+classic 8-bit home computer sound chips.
+
+The first revision defines the top-level register bus and output pin contract:
+
+- `ui_in[7:0]`: register data input
+- `uio_in[5:0]`: register address
+- `uio_in[6]`: active-low write strobe, `/WR`
+- `uio_in[7]`: active-low chip select, `/CS`
+- `uio_oe[7:0]`: always `8'h00`; every `uio` pin is treated as an input
+- `uo_out[7]`: 1-bit audio output for an Audio PMOD
+- `uo_out[6:0]`: debug/status output
 
 ## How to test
 
-Explain how to use your project
+Drive `/CS` and `/WR` low with a register address on `uio_in[5:0]` and data on
+`ui_in[7:0]`. In this starter revision, `uo_out[7]` is held low and
+`uo_out[6:0]` exposes basic bus status for bring-up.
 
 ## External hardware
 
-List external hardware used in your project (e.g. PMOD, LED display, etc), if any
+Audio PMOD on `uo_out[7]`.
