@@ -22,11 +22,26 @@ The first revision defines the top-level register bus and output pin contract:
 - `uo_out[7]`: 1-bit audio output for an Audio PMOD
 - `uo_out[6:0]`: debug/status output
 
+The starter audio core exposes one square-wave voice:
+
+- register `0x00`: phase increment low byte
+- register `0x01`: phase increment high byte
+- register `0x02`: bit 0 is gate enable
+
 ## How to test
 
 Drive `/CS` and `/WR` low with a register address on `uio_in[5:0]` and data on
-`ui_in[7:0]`. In this starter revision, `uo_out[7]` is held low and
-`uo_out[6:0]` exposes basic bus status for bring-up.
+`ui_in[7:0]`.
+
+The cocotb testbench can also render audio from a timed write sequence:
+
+```sh
+cd test
+make render-wav
+```
+
+By default this reads `audio_sequence.json` and writes a 48 kHz mono
+`chipsynth_render.wav` file.
 
 ## External hardware
 

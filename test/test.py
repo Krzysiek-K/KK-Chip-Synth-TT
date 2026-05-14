@@ -6,6 +6,14 @@ from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles
 
 
+async def bus_write(dut, addr, data):
+    dut.ui_in.value = data
+    dut.uio_in.value = addr & 0x3F  # /CS=0, /WR=0
+    await ClockCycles(dut.clk, 1)
+    dut.uio_in.value = 0xC0 | (addr & 0x3F)  # /CS=1, /WR=1
+    await ClockCycles(dut.clk, 1)
+
+
 @cocotb.test()
 async def test_project(dut):
     dut._log.info("Start")
@@ -18,24 +26,25 @@ async def test_project(dut):
     dut._log.info("Reset")
     dut.ena.value = 1
     dut.ui_in.value = 0
-    dut.uio_in.value = 0
+    dut.uio_in.value = 0xC0
     dut.rst_n.value = 0
     await ClockCycles(dut.clk, 10)
     dut.rst_n.value = 1
 
     dut._log.info("Test ChipSynth pinout behavior")
 
-    dut.ui_in.value = 0xA5
-    dut.uio_in.value = 0x15  # /CS=0, /WR=0, reg_addr=0x15
-
-    await ClockCycles(dut.clk, 1)
-
     assert dut.uio_oe.value == 0x00
     assert dut.uio_out.value == 0x00
-    assert dut.uo_out.value == 0x75  # audio=0, selected=1, write=1, addr[4:0]=0x15
+    assert dut.uo_out.value == 0x00
 
-    dut.uio_in.value = 0xAA  # /CS=1, /WR=0, reg_addr=0x2a
+    await bus_write(dut, 0x00, 0x00)
+    await bus_write(dut, 0x01, 0x80)
+    await bus_write(dut, 0x02, 0x01)
 
-    await ClockCycles(dut.clk, 1)
+    audio_bits = []
+    for _ in range(8):
+        await ClockCycles(dut.clk, 1)
+        audio_bits.append((int(dut.uo_out.value) >> 7) & 1)
 
-    assert dut.uo_out.value == 0x0A  # audio=0, selected=0, write=0, addr[4:0]=0x0a
+    assert 0 in audio_bits
+    assert 1 in audio_bits

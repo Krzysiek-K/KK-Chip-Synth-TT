@@ -24,17 +24,43 @@ module tt_um_KK_ChipSynth (
   wire chip_selected = ~cs_n;
   wire write_active  = chip_selected & ~wr_n;
 
+  reg [15:0] phase_acc;
+  reg [15:0] phase_inc;
+  reg        gate;
+
+  always @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      phase_acc <= 16'h0000;
+      phase_inc <= 16'h0000;
+      gate      <= 1'b0;
+    end else begin
+      if (write_active) begin
+        case (reg_addr)
+          6'h00: phase_inc[7:0]  <= reg_data;
+          6'h01: phase_inc[15:8] <= reg_data;
+          6'h02: gate            <= reg_data[0];
+          default: begin
+          end
+        endcase
+      end
+
+      if (gate) begin
+        phase_acc <= phase_acc + phase_inc;
+      end else begin
+        phase_acc <= 16'h0000;
+      end
+    end
+  end
+
   // All uio pins are input-only for the ASIC interface.
   assign uio_out = 8'h00;
   assign uio_oe  = 8'h00;
 
-  // Stub outputs for the first pinout step:
-  // uo_out[7] is the 1-bit audio stream, held idle until the synth core exists.
-  // uo_out[6:0] exposes simple bus status for bring-up/debug.
-  assign uo_out[7]   = 1'b0;
-  assign uo_out[6:0] = {chip_selected, write_active, reg_addr[4:0]};
+  // Starter voice: a register-controlled square wave.
+  assign uo_out[7]   = gate & phase_acc[15];
+  assign uo_out[6:0] = {chip_selected, write_active, gate, phase_acc[15:12]};
 
   // List all unused inputs to prevent warnings
-  wire _unused = &{ena, clk, rst_n, reg_data, reg_addr[5], 1'b0};
+  wire _unused = &{ena, 1'b0};
 
 endmodule

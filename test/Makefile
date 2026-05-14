@@ -39,7 +39,16 @@ VERILOG_SOURCES += $(PWD)/tb.v
 TOPLEVEL = tb
 
 # List test modules to run, separated by commas and without the .py suffix:
-COCOTB_TEST_MODULES = test
+COCOTB_TEST_MODULES ?= test
+
+export AUDIO_SEQUENCE ?= audio_sequence.json
+export AUDIO_WAV ?= chipsynth_render.wav
+export SIM_CLOCK_HZ ?= 1536000
+export AUDIO_SAMPLE_RATE ?= 48000
 
 # include cocotb's make rules to take care of the simulator setup
 include $(shell cocotb-config --makefiles)/Makefile.sim
+
+.PHONY: render-wav
+render-wav:
+	$(MAKE) -B COCOTB_TEST_MODULES=render_wav
