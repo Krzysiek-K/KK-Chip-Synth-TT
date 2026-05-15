@@ -6,9 +6,9 @@
 `default_nettype none
 
 module synth_divider (
-    input  wire [7:0] reg_data,
-    input  wire       write_prescaler_strobe,
-    input  wire       write_timer_strobe,
+    input  wire [7:0] bus_data,
+    input  wire       write_CTRL,
+    input  wire       write_PER,
     input  wire [7:0] prescaler_src,
     output wire       square_out,
     output wire       selected_prescaler_clk,
@@ -16,21 +16,21 @@ module synth_divider (
     output wire [2:0] prescaler_select
 );
 
-  reg [3:0] control_reg;
-  reg [7:0] timer_reg;
-  reg [7:0] timer_count;
+  reg [3:0] reg_CTRL;
+  reg [7:0] reg_PER;
+  reg [7:0] per_count;
   reg       square_reg;
 
-  always @(posedge write_prescaler_strobe) begin
-    control_reg <= reg_data[3:0];
+  always @(posedge write_CTRL) begin
+    reg_CTRL <= bus_data[3:0];
   end
 
-  always @(posedge write_timer_strobe) begin
-    timer_reg <= reg_data;
+  always @(posedge write_PER) begin
+    reg_PER <= bus_data;
   end
 
-  assign prescaler_select       = control_reg[2:0];
-  assign divider_reset          = control_reg[3];
+  assign prescaler_select       = reg_CTRL[2:0];
+  assign divider_reset          = reg_CTRL[3];
 
   // This mux output clocks the timer counter and must remain visible to STA/CTS.
   (* keep = "true" *) wire prescaler_mux_clk;
@@ -38,11 +38,11 @@ module synth_divider (
   assign selected_prescaler_clk = prescaler_mux_clk;
 
   always @(posedge prescaler_mux_clk) begin
-    if (divider_reset || (timer_count == timer_reg)) begin
-      timer_count <= 8'h00;
+    if (divider_reset || (per_count == reg_PER)) begin
+      per_count  <= 8'h00;
       square_reg  <= divider_reset ? 1'b0 : ~square_reg;
     end else begin
-      timer_count <= timer_count + 8'h01;
+      per_count <= per_count + 8'h01;
     end
   end
 

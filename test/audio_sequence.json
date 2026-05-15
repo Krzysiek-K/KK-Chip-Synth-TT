@@ -4,14 +4,17 @@
   "duration_ms": 760,
   "output_wav": "chipsynth_render.wav",
   "writes": [
-    { "r3F": 0 },
-    { "r00": 8, "r01": 0 },
-    { "r3F": 1 },
+    { "GCTRL": 0 },
+    { "CTRL0": 8, "PER0": 2, "VOL0": 8 },
+    { "CTRL1": 8, "PER1": 3, "VOL1": 12 },
+    { "CTRL2": 8, "PER2": 7, "VOL2": 14 },
+    { "CTRL3": 8, "PER3": 15, "VOL3": 15 },
+    { "GCTRL": 1 },
     { "wait_ms": 2 },
-    { "r00": 0, "wait_ms": 248 },
-    { "r00": 8, "r01": 1, "wait_ms": 2 },
-    { "r00": 0, "wait_ms": 248 },
-    { "r00": 8, "r01": 2, "wait_ms": 2 },
-    { "r00": 0, "wait_ms": 248 }
+    { "CTRL0": 0, "CTRL1": 0, "CTRL2": 0, "CTRL3": 0, "wait_ms": 248 },
+    { "CTRL0": 8, "PER0": 3, "VOL0": 8, "wait_ms": 2 },
+    { "CTRL0": 0, "CTRL1": 1, "CTRL2": 2, "CTRL3": 3, "wait_ms": 248 },
+    { "CTRL0": 8, "PER0": 4, "VOL0": 8, "wait_ms": 2 },
+    { "CTRL0": 0, "CTRL1": 2, "CTRL2": 3, "CTRL3": 4, "wait_ms": 248 }
   ]
 }

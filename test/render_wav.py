@@ -16,10 +16,21 @@ DEFAULT_WAV = "chipsynth_render.wav"
 DEFAULT_CLOCK_HZ = 196_608
 DEFAULT_SAMPLE_RATE_HZ = 48_000
 
-# Future friendly: add aliases such as "freq_lo": 0x00 here when the register
-# map settles.
 REGISTER_NAMES = {
-    "global_control": 0x3F,
+    "GCTRL": 0x3F,
+    "GLOBAL_CONTROL": 0x3F,
+    "CTRL0": 0x00,
+    "PER0": 0x01,
+    "VOL0": 0x02,
+    "CTRL1": 0x04,
+    "PER1": 0x05,
+    "VOL1": 0x06,
+    "CTRL2": 0x08,
+    "PER2": 0x09,
+    "VOL2": 0x0A,
+    "CTRL3": 0x0C,
+    "PER3": 0x0D,
+    "VOL3": 0x0E,
 }
 
 
@@ -58,8 +69,9 @@ def _cycles_from_ms(time_ms, clock_hz):
 
 
 def _register_addr_from_key(key):
-    if key in REGISTER_NAMES:
-        addr = REGISTER_NAMES[key]
+    name = key.upper()
+    if name in REGISTER_NAMES:
+        addr = REGISTER_NAMES[name]
     elif key.startswith(("0x", "0X")) or key.isdigit():
         addr = _parse_int(key)
     elif len(key) == 3 and key[0] in ("r", "R"):

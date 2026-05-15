@@ -60,7 +60,12 @@ def main():
 
     runner = get_runner(os.environ.get("SIM", "icarus"))
     runner.build(
-        sources=[SRC_DIR / "synth_divider.v", SRC_DIR / "project.v", TEST_DIR / "tb.v"],
+        sources=[
+            SRC_DIR / "synth_divider.v",
+            SRC_DIR / "synth_mixer.v",
+            SRC_DIR / "project.v",
+            TEST_DIR / "tb.v",
+        ],
         includes=[SRC_DIR],
         hdl_toplevel="tb",
         build_args=["-g2012"],

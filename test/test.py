@@ -14,6 +14,21 @@ async def bus_write(dut, addr, data):
     await ClockCycles(dut.clk, 1)
 
 
+REG_GCTRL = 0x3F
+REG_CTRL0 = 0x00
+REG_PER0 = 0x01
+REG_VOL0 = 0x02
+REG_CTRL1 = 0x04
+REG_PER1 = 0x05
+REG_VOL1 = 0x06
+REG_CTRL2 = 0x08
+REG_PER2 = 0x09
+REG_VOL2 = 0x0A
+REG_CTRL3 = 0x0C
+REG_PER3 = 0x0D
+REG_VOL3 = 0x0E
+
+
 @cocotb.test()
 async def test_project(dut):
     dut._log.info("Start")
@@ -36,27 +51,51 @@ async def test_project(dut):
     assert dut.uio_oe.value == 0x00
     assert dut.uio_out.value == 0x00
 
-    await bus_write(dut, 0x3F, 0x00)
+    await bus_write(dut, REG_GCTRL, 0x00)
     # Voice registers must remain writable while the global prescaler reset is held.
-    await bus_write(dut, 0x00, 0x08)
-    await bus_write(dut, 0x01, 0x02)
-    assert int(dut.uo_out.value[6]) == 0
+    await bus_write(dut, REG_CTRL0, 0x08)
+    await bus_write(dut, REG_PER0, 0x02)
+    await bus_write(dut, REG_VOL0, 0x08)
+    await bus_write(dut, REG_CTRL1, 0x08)
+    await bus_write(dut, REG_PER1, 0x03)
+    await bus_write(dut, REG_VOL1, 0x08)
+    await bus_write(dut, REG_CTRL2, 0x08)
+    await bus_write(dut, REG_PER2, 0x04)
+    await bus_write(dut, REG_VOL2, 0x08)
+    await bus_write(dut, REG_CTRL3, 0x08)
+    await bus_write(dut, REG_PER3, 0x05)
+    await bus_write(dut, REG_VOL3, 0x08)
+    assert int(dut.uo_out.value[2]) == 0
 
-    await bus_write(dut, 0x3F, 0x01)
-    await ClockCycles(dut.clk, 512)
+    await bus_write(dut, REG_GCTRL, 0x01)
+    await ClockCycles(dut.clk, 256)
 
-    assert int(dut.uo_out.value[6]) == 1
-    assert int(dut.uo_out.value[7]) == 0
+    assert int(dut.uo_out.value[2]) == 1
 
-    await bus_write(dut, 0x00, 0x00)
-    assert (int(dut.uo_out.value) & 0x07) == 0
+    await bus_write(dut, REG_CTRL0, 0x00)
+    await bus_write(dut, REG_CTRL1, 0x00)
+    await bus_write(dut, REG_CTRL2, 0x00)
+    await bus_write(dut, REG_CTRL3, 0x00)
 
     audio_bits = []
-    for _ in range(1024):
+    channel_bits = [[], [], [], []]
+    selector_bits = []
+    for _ in range(8192):
         await ClockCycles(dut.clk, 1)
         audio = dut.uo_out.value[7]
         if audio.is_resolvable:
             audio_bits.append(int(audio))
+        for channel in range(4):
+            bit = dut.uo_out.value[3 + channel]
+            if bit.is_resolvable:
+                channel_bits[channel].append(int(bit))
+        selector = dut.uo_out.value[1:0]
+        if selector.is_resolvable:
+            selector_bits.append(int(selector))
 
     assert 0 in audio_bits
     assert 1 in audio_bits
+    assert set(selector_bits) == {0, 1, 2, 3}
+    for bits in channel_bits:
+        assert 0 in bits
+        assert 1 in bits
