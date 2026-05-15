@@ -36,13 +36,20 @@ async def test_project(dut):
     assert dut.uio_oe.value == 0x00
     assert dut.uio_out.value == 0x00
 
+    await bus_write(dut, 0x3F, 0x00)
+    # Voice registers must remain writable while the global prescaler reset is held.
     await bus_write(dut, 0x00, 0x08)
     await bus_write(dut, 0x01, 0x02)
+    assert int(dut.uo_out.value[6]) == 0
+
+    await bus_write(dut, 0x3F, 0x01)
     await ClockCycles(dut.clk, 512)
 
+    assert int(dut.uo_out.value[6]) == 1
     assert int(dut.uo_out.value[7]) == 0
 
     await bus_write(dut, 0x00, 0x00)
+    assert (int(dut.uo_out.value) & 0x07) == 0
 
     audio_bits = []
     for _ in range(1024):

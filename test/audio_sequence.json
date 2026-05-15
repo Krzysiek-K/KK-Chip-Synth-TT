@@ -4,7 +4,10 @@
   "duration_ms": 760,
   "output_wav": "chipsynth_render.wav",
   "writes": [
-    { "r00": 8, "r01": 0, "wait_ms": 2 },
+    { "r3F": 0 },
+    { "r00": 8, "r01": 0 },
+    { "r3F": 1 },
+    { "wait_ms": 2 },
     { "r00": 0, "wait_ms": 248 },
     { "r00": 8, "r01": 1, "wait_ms": 2 },
     { "r00": 0, "wait_ms": 248 },

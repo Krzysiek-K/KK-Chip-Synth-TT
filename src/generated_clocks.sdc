@@ -127,6 +127,11 @@ foreach pin [chipsynth_helper_strobe chipsynth_write_timer 8 {
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
+foreach pin [chipsynth_helper_strobe chipsynth_write_global_control 1 {
+    write_global_control
+}] {
+    lappend chipsynth_allowed_unclocked_pins $pin
+}
 set chipsynth_allowed_unclocked_pins [chipsynth_unique $chipsynth_allowed_unclocked_pins]
 
 set chipsynth_clocked_pins [chipsynth_clocked_clock_pins]

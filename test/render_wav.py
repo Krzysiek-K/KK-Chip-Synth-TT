@@ -18,7 +18,9 @@ DEFAULT_SAMPLE_RATE_HZ = 48_000
 
 # Future friendly: add aliases such as "freq_lo": 0x00 here when the register
 # map settles.
-REGISTER_NAMES = {}
+REGISTER_NAMES = {
+    "global_control": 0x3F,
+}
 
 
 def _load_sequence():
@@ -191,7 +193,8 @@ async def render_wav(dut):
         next_elapsed_ps = round((sample_index + 1) * sample_period_ps)
         await Timer(next_elapsed_ps - elapsed_ps, unit="ps")
         elapsed_ps = next_elapsed_ps
-        samples.append(_sample_from_bit((int(dut.uo_out.value) >> 7) & 1))
+        audio_bit = dut.uo_out.value[7]
+        samples.append(_sample_from_bit(int(audio_bit) if audio_bit.is_resolvable else 0))
 
     _write_wav(wav_path, sample_rate_hz, samples)
     dut._log.info("Wrote %s", wav_path)

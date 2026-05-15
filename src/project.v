@@ -24,17 +24,22 @@ module tt_um_KK_ChipSynth (
   wire chip_selected = ~cs_n;
   wire write_strobe  = chip_selected & ~wr_n;
 
-  wire write_prescaler = write_strobe & (reg_addr == 6'h00);
-  wire write_timer     = write_strobe & (reg_addr == 6'h01);
+  wire write_prescaler      = write_strobe & ~reg_addr[0];
+  wire write_timer          = write_strobe & reg_addr[0] & ~reg_addr[1];
+  wire write_global_control = write_strobe & reg_addr[1];
 
-  reg [13:0] shared_clk_div = 14'h0000;
+  reg [13:0] shared_clk_div;
+  reg        global_reset_n;
 
-  always @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-      shared_clk_div <= 14'h0000;
-    end else begin
-      shared_clk_div <= shared_clk_div + 14'h0001;
-    end
+  always @(posedge write_global_control) begin
+    global_reset_n <= reg_data[0];
+  end
+
+  wire shared_reset_n = rst_n & global_reset_n;
+  wire [13:0] shared_clk_div_next = (shared_clk_div + 14'h0001) & {14{shared_reset_n}};
+
+  always @(posedge clk) begin
+    shared_clk_div <= shared_clk_div_next;
   end
 
   wire       divider_out;
@@ -60,7 +65,7 @@ module tt_um_KK_ChipSynth (
 
   // Starter voice: a two-register divider oscillator.
   assign uo_out[7]   = divider_out;
-  assign uo_out[6:0] = {chip_selected, write_strobe, divider_reset, divider_out, divider_prescaler};
+  assign uo_out[6:0] = {global_reset_n, chip_selected, write_strobe, divider_reset, divider_prescaler};
 
   // List all unused inputs to prevent warnings
   wire _unused = &{ena, 1'b0};

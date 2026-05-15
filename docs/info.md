@@ -27,11 +27,23 @@ The starter audio core exposes one square-wave voice:
 - register `0x00`: control register; bits `[2:0]` select the prescaler tap,
   bit `3` holds output low and resets the timer on the next selected prescaler edge
 - register `0x01`: 8-bit timer divider
+- register `0x3F`: global control; bit `0` is active-low `/reset`.
+  Write `0` to hold the shared prescaler reset and `1` to release it.
+
+The canonical register addresses above are the software-facing map. The address
+decoder is intentionally minimal and may alias other addresses, including
+aliases that update more than one register. The canonical addresses write only
+their documented register.
 
 The top level provides a shared clock divider. `synth_divider` receives an
 8-bit tap window after an initial divide-by-64 stage, selects one tap using the
 prescaler register, then divides it with the timer register to produce the
-1-bit square-wave output.
+1-bit square-wave output. The shared divider uses ordinary `posedge clk`
+registers; reset is applied through the D input so a clock edge while `/reset`
+is low clears the divider without using resettable flops. The global reset bit
+does not gate register writes or the voice timer, which has its own reset bit.
+After TT reset, software should write `0` then configure the voice, then write
+`1` to release the prescaler from a known state.
 
 The selected prescaler tap is a generated clock for the divider timer counter.
 `src/generated_clocks.sdc` makes that mux output a checked generated clock for

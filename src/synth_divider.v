@@ -16,10 +16,10 @@ module synth_divider (
     output wire [2:0] prescaler_select
 );
 
-  reg [3:0] control_reg   = 4'h0;
-  reg [7:0] timer_reg     = 8'h00;
-  reg [7:0] timer_count   = 8'h00;
-  reg       square_reg    = 1'b0;
+  reg [3:0] control_reg;
+  reg [7:0] timer_reg;
+  reg [7:0] timer_count;
+  reg       square_reg;
 
   always @(posedge write_prescaler_strobe) begin
     control_reg <= reg_data[3:0];
