@@ -13,7 +13,7 @@ from cocotb.triggers import RisingEdge
 
 DEFAULT_SEQUENCE = "audio_sequence.json"
 DEFAULT_WAV = "chipsynth_render.wav"
-DEFAULT_CLOCK_HZ = 1_536_000
+DEFAULT_CLOCK_HZ = 48_000
 DEFAULT_SAMPLE_RATE_HZ = 48_000
 
 
@@ -69,6 +69,8 @@ async def render_wav(dut):
     total_samples = round((duration_ms / 1000.0) * sample_rate_hz)
     total_cycles = total_samples * cycles_per_sample
     clock_period_ps = round(1_000_000_000_000 / clock_hz)
+    if clock_period_ps % 2:
+        clock_period_ps += 1
 
     writes = sorted(sequence.get("writes", []), key=lambda write: _write_cycle(write, clock_hz))
     next_write = 0

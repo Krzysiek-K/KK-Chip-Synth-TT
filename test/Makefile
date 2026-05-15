@@ -43,7 +43,7 @@ COCOTB_TEST_MODULES ?= test
 
 export AUDIO_SEQUENCE ?= audio_sequence.json
 export AUDIO_WAV ?= chipsynth_render.wav
-export SIM_CLOCK_HZ ?= 1536000
+export SIM_CLOCK_HZ ?= 48000
 export AUDIO_SAMPLE_RATE ?= 48000
 
 # include cocotb's make rules to take care of the simulator setup

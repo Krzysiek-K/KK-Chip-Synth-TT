@@ -4,6 +4,7 @@ import argparse
 import os
 from pathlib import Path
 
+from cocotb_tools.check_results import get_results
 from cocotb_tools.runner import get_runner
 
 
@@ -54,7 +55,7 @@ def main():
     if args.target == "render-wav":
         os.environ.setdefault("AUDIO_SEQUENCE", str(TEST_DIR / "audio_sequence.json"))
         os.environ.setdefault("AUDIO_WAV", str(TEST_DIR / "chipsynth_render.wav"))
-        os.environ.setdefault("SIM_CLOCK_HZ", "1536000")
+        os.environ.setdefault("SIM_CLOCK_HZ", "48000")
         os.environ.setdefault("AUDIO_SAMPLE_RATE", "48000")
 
     runner = get_runner(os.environ.get("SIM", "icarus"))
@@ -66,14 +67,19 @@ def main():
         build_dir=build_dir,
         always=True,
     )
+    results_xml = TEST_DIR / "results.xml"
     runner.test(
         hdl_toplevel="tb",
         hdl_toplevel_lang="verilog",
         test_module=test_module,
         build_dir=build_dir,
         test_dir=TEST_DIR,
-        results_xml=str(TEST_DIR / "results.xml"),
+        results_xml=str(results_xml),
     )
+
+    tests, failures = get_results(results_xml)
+    if failures:
+        raise SystemExit(f"{failures} of {tests} cocotb tests failed")
 
 
 if __name__ == "__main__":

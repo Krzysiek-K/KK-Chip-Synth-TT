@@ -79,8 +79,8 @@ make render-wav
 ```
 
 The renderer expects `SIM_CLOCK_HZ` to be an integer multiple of
-`AUDIO_SAMPLE_RATE`. The default is `1536000`, which is 32 simulator clocks per
-48 kHz output sample.
+`AUDIO_SAMPLE_RATE`. The default is `48000`, which is one simulator clock per
+48 kHz output sample for quick register-sequence renders.
 
 To run gatelevel simulation, first harden your project and copy `../runs/wokwi/results/final/verilog/gl/{your_module_name}.v` to `gate_level_netlist.v`.
 
