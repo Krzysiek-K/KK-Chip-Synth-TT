@@ -33,6 +33,13 @@ The top level provides a shared clock divider. `synth_divider` receives an
 prescaler register, then divides it with the timer register to produce the
 1-bit square-wave output.
 
+The selected prescaler tap is a generated clock for the divider timer counter.
+`src/generated_clocks.sdc` makes that mux output a checked generated clock for
+LibreLane/OpenROAD, with an exact sink-count check so future race-sensitive
+state must either use a covered clock tree or add a new generated-clock
+constraint. The `/CS`, `/WR`, and address decode write strobes intentionally
+remain cheap helper-register clocks and are explicitly whitelisted by the SDC.
+
 ## How to test
 
 Drive `/CS` and `/WR` low with a register address on `uio_in[5:0]` and data on

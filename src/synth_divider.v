@@ -31,9 +31,13 @@ module synth_divider (
 
   assign prescaler_select       = control_reg[2:0];
   assign divider_reset          = control_reg[3];
-  assign selected_prescaler_clk = prescaler_src[prescaler_select];
 
-  always @(posedge selected_prescaler_clk) begin
+  // This mux output clocks the timer counter and must remain visible to STA/CTS.
+  (* keep = "true" *) wire prescaler_mux_clk;
+  assign prescaler_mux_clk      = prescaler_src[prescaler_select];
+  assign selected_prescaler_clk = prescaler_mux_clk;
+
+  always @(posedge prescaler_mux_clk) begin
     if (divider_reset || (timer_count == timer_reg)) begin
       timer_count <= 8'h00;
       square_reg  <= divider_reset ? 1'b0 : ~square_reg;

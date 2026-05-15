@@ -38,8 +38,8 @@ module tt_um_KK_ChipSynth (
   end
 
   wire       divider_out;
-  // Generated clock for the divider timer; this will need an STA constraint.
-  wire       divider_clk;
+  // Generated clock root for the divider timer; constrained in generated_clocks.sdc.
+  (* keep = "true" *) wire divider_clk;
   wire       divider_reset;
   wire [2:0] divider_prescaler;
 
