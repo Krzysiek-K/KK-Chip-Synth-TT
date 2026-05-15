@@ -44,12 +44,66 @@ def _sample_from_bit_count(high_count, cycles_per_sample):
     return max(-32768, min(32767, round((duty * 2.0 - 1.0) * 32767)))
 
 
-def _write_cycle(write, clock_hz):
-    if "cycle" in write:
-        return int(write["cycle"])
+def _parse_int(value):
+    if isinstance(value, str):
+        return int(value, 0)
 
-    time_ms = float(write.get("time_ms", 0.0))
-    return round((time_ms / 1000.0) * clock_hz)
+    return int(value)
+
+
+def _cycles_from_ms(time_ms, clock_hz):
+    return round((float(time_ms) / 1000.0) * clock_hz)
+
+
+def _is_register_key(key):
+    return key.startswith(("0x", "0X")) or key.isdigit()
+
+
+def _absolute_write_cycle(write, clock_hz):
+    if "cycle" in write:
+        return _parse_int(write["cycle"])
+
+    return _cycles_from_ms(write.get("time_ms", 0.0), clock_hz)
+
+
+def _normalize_writes(sequence_writes, clock_hz):
+    writes = []
+    cursor_cycle = 0
+
+    for step in sequence_writes:
+        if not isinstance(step, dict):
+            raise TypeError("Each write sequence step must be an object")
+
+        if "addr" in step and "data" in step:
+            write_cycle = _absolute_write_cycle(step, clock_hz)
+            writes.append(
+                {
+                    "cycle": write_cycle,
+                    "addr": _parse_int(step["addr"]),
+                    "data": _parse_int(step["data"]),
+                }
+            )
+            cursor_cycle = max(cursor_cycle, write_cycle + 1)
+            continue
+
+        for key, value in step.items():
+            if key == "wait_cycles":
+                cursor_cycle += _parse_int(value)
+            elif key == "wait_ms":
+                cursor_cycle += _cycles_from_ms(value, clock_hz)
+            elif _is_register_key(key):
+                writes.append(
+                    {
+                        "cycle": cursor_cycle,
+                        "addr": _parse_int(key),
+                        "data": _parse_int(value),
+                    }
+                )
+                cursor_cycle += 1
+            else:
+                raise ValueError(f"Unsupported write sequence key {key!r} in {step!r}")
+
+    return sorted(writes, key=lambda write: write["cycle"])
 
 
 @cocotb.test()
@@ -72,7 +126,7 @@ async def render_wav(dut):
     if clock_period_ps % 2:
         clock_period_ps += 1
 
-    writes = sorted(sequence.get("writes", []), key=lambda write: _write_cycle(write, clock_hz))
+    writes = _normalize_writes(sequence.get("writes", []), clock_hz)
     next_write = 0
     high_count = 0
     sample_cycles = 0
@@ -99,7 +153,7 @@ async def render_wav(dut):
     dut.rst_n.value = 1
 
     for cycle in range(total_cycles):
-        if next_write < len(writes) and _write_cycle(writes[next_write], clock_hz) <= cycle:
+        if next_write < len(writes) and writes[next_write]["cycle"] <= cycle:
             write = writes[next_write]
             dut.ui_in.value = int(write["data"]) & 0xFF
             dut.uio_in.value = int(write["addr"]) & 0x3F

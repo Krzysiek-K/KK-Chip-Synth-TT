@@ -82,6 +82,23 @@ The renderer expects `SIM_CLOCK_HZ` to be an integer multiple of
 `AUDIO_SAMPLE_RATE`. The default is `48000`, which is one simulator clock per
 48 kHz output sample for quick register-sequence renders.
 
+`audio_sequence.json` supports compact ordered write blocks:
+
+```json
+{
+  "writes": [
+    { "0x00": 89, "0x01": 2, "0x02": 1, "wait_ms": 250 },
+    { "0x00": 202, "0x01": 2, "wait_ms": 250 },
+    { "0x00": 132, "0x01": 3, "wait_ms": 250 },
+    { "0x02": 0 }
+  ]
+}
+```
+
+Within each block, keys are processed in order. Register keys emit writes on
+consecutive simulator clocks; `wait_ms` and `wait_cycles` advance the cursor.
+The older absolute form still works: `{ "time_ms": 250, "addr": 0, "data": 202 }`.
+
 To run gatelevel simulation, first harden your project and copy `../runs/wokwi/results/final/verilog/gl/{your_module_name}.v` to `gate_level_netlist.v`.
 
 Then run:

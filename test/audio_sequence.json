@@ -1,16 +1,12 @@
 {
   "clock_hz": 48000,
   "sample_rate_hz": 48000,
-  "duration_ms": 750,
+  "duration_ms": 760,
   "output_wav": "chipsynth_render.wav",
   "writes": [
-    { "time_ms": 0, "addr": 0, "data": 89 },
-    { "time_ms": 0, "addr": 1, "data": 2 },
-    { "time_ms": 0, "addr": 2, "data": 1 },
-    { "time_ms": 250, "addr": 0, "data": 202 },
-    { "time_ms": 250, "addr": 1, "data": 2 },
-    { "time_ms": 500, "addr": 0, "data": 132 },
-    { "time_ms": 500, "addr": 1, "data": 3 },
-    { "time_ms": 720, "addr": 2, "data": 0 }
+    { "0x00": 89, "0x01": 2, "0x02": 1, "wait_ms": 250 },
+    { "0x00": 202, "0x01": 2, "wait_ms": 250 },
+    { "0x00": 132, "0x01": 3, "wait_ms": 250 },
+    { "0x02": 0 }
   ]
 }
