@@ -55,12 +55,12 @@ def main():
     if args.target == "render-wav":
         os.environ.setdefault("AUDIO_SEQUENCE", str(TEST_DIR / "audio_sequence.json"))
         os.environ.setdefault("AUDIO_WAV", str(TEST_DIR / "chipsynth_render.wav"))
-        os.environ.setdefault("SIM_CLOCK_HZ", "48000")
+        os.environ.setdefault("SIM_CLOCK_HZ", "196608")
         os.environ.setdefault("AUDIO_SAMPLE_RATE", "48000")
 
     runner = get_runner(os.environ.get("SIM", "icarus"))
     runner.build(
-        sources=[SRC_DIR / "project.v", TEST_DIR / "tb.v"],
+        sources=[SRC_DIR / "synth_divider.v", SRC_DIR / "project.v", TEST_DIR / "tb.v"],
         includes=[SRC_DIR],
         hdl_toplevel="tb",
         build_args=["-g2012"],

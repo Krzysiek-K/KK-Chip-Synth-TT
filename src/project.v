@@ -22,45 +22,43 @@ module tt_um_KK_ChipSynth (
   wire       cs_n     = uio_in[7];
 
   wire chip_selected = ~cs_n;
-  wire write_active  = chip_selected & ~wr_n;
+  wire write_strobe  = chip_selected & ~wr_n;
 
-  reg [15:0] phase_acc;
-  reg [15:0] phase_inc;
-  reg        gate;
+  wire write_prescaler = write_strobe & (reg_addr == 6'h00);
+  wire write_timer     = write_strobe & (reg_addr == 6'h01);
 
-  always @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-      phase_acc <= 16'h0000;
-      phase_inc <= 16'h0000;
-      gate      <= 1'b0;
-    end else begin
-      if (write_active) begin
-        case (reg_addr)
-          6'h00: phase_inc[7:0]  <= reg_data;
-          6'h01: phase_inc[15:8] <= reg_data;
-          6'h02: gate            <= reg_data[0];
-          default: begin
-          end
-        endcase
-      end
+  reg [13:0] shared_clk_div = 14'h0000;
 
-      if (gate) begin
-        phase_acc <= phase_acc + phase_inc;
-      end else begin
-        phase_acc <= 16'h0000;
-      end
-    end
+  always @(posedge clk) begin
+    shared_clk_div <= shared_clk_div + 14'h0001;
   end
+
+  wire       divider_out;
+  // Generated clock for the divider timer; this will need an STA constraint.
+  wire       divider_clk;
+  wire       divider_reset;
+  wire [2:0] divider_prescaler;
+
+  synth_divider voice0 (
+      .reg_data(reg_data),
+      .write_prescaler_strobe(write_prescaler),
+      .write_timer_strobe(write_timer),
+      .prescaler_src(shared_clk_div[13:6]),
+      .square_out(divider_out),
+      .selected_prescaler_clk(divider_clk),
+      .divider_reset(divider_reset),
+      .prescaler_select(divider_prescaler)
+  );
 
   // All uio pins are input-only for the ASIC interface.
   assign uio_out = 8'h00;
   assign uio_oe  = 8'h00;
 
-  // Starter voice: a register-controlled square wave.
-  assign uo_out[7]   = gate & phase_acc[15];
-  assign uo_out[6:0] = {chip_selected, write_active, gate, phase_acc[15:12]};
+  // Starter voice: a two-register divider oscillator.
+  assign uo_out[7]   = divider_out;
+  assign uo_out[6:0] = {chip_selected, write_strobe, divider_reset, divider_out, divider_prescaler};
 
   // List all unused inputs to prevent warnings
-  wire _unused = &{ena, 1'b0};
+  wire _unused = &{ena, rst_n, 1'b0};
 
 endmodule

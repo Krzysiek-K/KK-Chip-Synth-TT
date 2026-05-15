@@ -8,12 +8,12 @@ from pathlib import Path
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge
+from cocotb.triggers import ClockCycles, RisingEdge, Timer
 
 
 DEFAULT_SEQUENCE = "audio_sequence.json"
 DEFAULT_WAV = "chipsynth_render.wav"
-DEFAULT_CLOCK_HZ = 48_000
+DEFAULT_CLOCK_HZ = 196_608
 DEFAULT_SAMPLE_RATE_HZ = 48_000
 
 # Future friendly: add aliases such as "freq_lo": 0x00 here when the register
@@ -40,12 +40,8 @@ def _write_wav(path, sample_rate_hz, samples):
         wav_file.writeframes(frames)
 
 
-def _sample_from_bit_count(high_count, cycles_per_sample):
-    if cycles_per_sample == 0:
-        return 0
-
-    duty = high_count / cycles_per_sample
-    return max(-32768, min(32767, round((duty * 2.0 - 1.0) * 32767)))
+def _sample_from_bit(audio_bit):
+    return 32767 if audio_bit else -32767
 
 
 def _parse_int(value):
@@ -131,6 +127,24 @@ def _normalize_writes(sequence_writes, clock_hz):
     return sorted(writes, key=lambda write: write["cycle"])
 
 
+async def _drive_writes(dut, writes):
+    current_cycle = 0
+
+    for write in writes:
+        write_cycle = int(write["cycle"])
+        wait_cycles = write_cycle - current_cycle
+
+        if wait_cycles > 0:
+            await ClockCycles(dut.clk, wait_cycles)
+
+        dut.ui_in.value = int(write["data"]) & 0xFF
+        dut.uio_in.value = int(write["addr"]) & 0x3F
+        await ClockCycles(dut.clk, 1)
+        dut.uio_in.value = 0xC0 | (int(write["addr"]) & 0x3F)
+
+        current_cycle = max(current_cycle + max(wait_cycles, 0), write_cycle) + 1
+
+
 @cocotb.test()
 async def render_wav(dut):
     sequence = _load_sequence()
@@ -141,28 +155,20 @@ async def render_wav(dut):
     duration_ms = float(sequence.get("duration_ms", 250.0))
     wav_path = Path(os.environ.get("AUDIO_WAV", sequence.get("output_wav", DEFAULT_WAV)))
 
-    if clock_hz % sample_rate_hz != 0:
-        raise ValueError("SIM_CLOCK_HZ must be an integer multiple of AUDIO_SAMPLE_RATE")
-
-    cycles_per_sample = clock_hz // sample_rate_hz
     total_samples = round((duration_ms / 1000.0) * sample_rate_hz)
-    total_cycles = total_samples * cycles_per_sample
     clock_period_ps = round(1_000_000_000_000 / clock_hz)
     if clock_period_ps % 2:
         clock_period_ps += 1
 
     writes = _normalize_writes(sequence.get("writes", []), clock_hz)
-    next_write = 0
-    high_count = 0
-    sample_cycles = 0
     samples = []
 
     dut._log.info(
-        "Rendering %s samples from %s at %s Hz using %s clock cycles/sample",
+        "Rendering %s samples from %s at %s Hz using %s Hz simulation clock",
         total_samples,
         sequence["_path"],
         sample_rate_hz,
-        cycles_per_sample,
+        clock_hz,
     )
 
     cocotb.start_soon(Clock(dut.clk, clock_period_ps, unit="ps").start())
@@ -176,25 +182,16 @@ async def render_wav(dut):
         await RisingEdge(dut.clk)
 
     dut.rst_n.value = 1
+    cocotb.start_soon(_drive_writes(dut, writes))
 
-    for cycle in range(total_cycles):
-        if next_write < len(writes) and writes[next_write]["cycle"] <= cycle:
-            write = writes[next_write]
-            dut.ui_in.value = int(write["data"]) & 0xFF
-            dut.uio_in.value = int(write["addr"]) & 0x3F
-            next_write += 1
-        else:
-            dut.uio_in.value = 0xC0
+    sample_period_ps = 1_000_000_000_000 / sample_rate_hz
+    elapsed_ps = 0
 
-        await RisingEdge(dut.clk)
-
-        high_count += (int(dut.uo_out.value) >> 7) & 1
-        sample_cycles += 1
-
-        if sample_cycles == cycles_per_sample:
-            samples.append(_sample_from_bit_count(high_count, cycles_per_sample))
-            high_count = 0
-            sample_cycles = 0
+    for sample_index in range(total_samples):
+        next_elapsed_ps = round((sample_index + 1) * sample_period_ps)
+        await Timer(next_elapsed_ps - elapsed_ps, unit="ps")
+        elapsed_ps = next_elapsed_ps
+        samples.append(_sample_from_bit((int(dut.uo_out.value) >> 7) & 1))
 
     _write_wav(wav_path, sample_rate_hz, samples)
     dut._log.info("Wrote %s", wav_path)

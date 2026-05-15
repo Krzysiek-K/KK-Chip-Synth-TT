@@ -24,9 +24,14 @@ The first revision defines the top-level register bus and output pin contract:
 
 The starter audio core exposes one square-wave voice:
 
-- register `0x00`: phase increment low byte
-- register `0x01`: phase increment high byte
-- register `0x02`: bit 0 is gate enable
+- register `0x00`: control register; bits `[2:0]` select the prescaler tap,
+  bit `3` holds output low and resets the timer on the next selected prescaler edge
+- register `0x01`: 8-bit timer divider
+
+The top level provides a shared clock divider. `synth_divider` receives an
+8-bit tap window after an initial divide-by-64 stage, selects one tap using the
+prescaler register, then divides it with the timer register to produce the
+1-bit square-wave output.
 
 ## How to test
 

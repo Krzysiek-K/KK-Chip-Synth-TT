@@ -35,16 +35,21 @@ async def test_project(dut):
 
     assert dut.uio_oe.value == 0x00
     assert dut.uio_out.value == 0x00
-    assert dut.uo_out.value == 0x00
+
+    await bus_write(dut, 0x00, 0x08)
+    await bus_write(dut, 0x01, 0x02)
+    await ClockCycles(dut.clk, 512)
+
+    assert int(dut.uo_out.value[7]) == 0
 
     await bus_write(dut, 0x00, 0x00)
-    await bus_write(dut, 0x01, 0x80)
-    await bus_write(dut, 0x02, 0x01)
 
     audio_bits = []
-    for _ in range(8):
+    for _ in range(1024):
         await ClockCycles(dut.clk, 1)
-        audio_bits.append((int(dut.uo_out.value) >> 7) & 1)
+        audio = dut.uo_out.value[7]
+        if audio.is_resolvable:
+            audio_bits.append(int(audio))
 
     assert 0 in audio_bits
     assert 1 in audio_bits
