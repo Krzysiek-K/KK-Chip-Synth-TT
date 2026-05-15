@@ -29,8 +29,12 @@ module tt_um_KK_ChipSynth (
 
   reg [13:0] shared_clk_div = 14'h0000;
 
-  always @(posedge clk) begin
-    shared_clk_div <= shared_clk_div + 14'h0001;
+  always @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      shared_clk_div <= 14'h0000;
+    end else begin
+      shared_clk_div <= shared_clk_div + 14'h0001;
+    end
   end
 
   wire       divider_out;
@@ -59,6 +63,6 @@ module tt_um_KK_ChipSynth (
   assign uo_out[6:0] = {chip_selected, write_strobe, divider_reset, divider_out, divider_prescaler};
 
   // List all unused inputs to prevent warnings
-  wire _unused = &{ena, rst_n, 1'b0};
+  wire _unused = &{ena, 1'b0};
 
 endmodule
