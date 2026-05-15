@@ -87,17 +87,19 @@ The renderer expects `SIM_CLOCK_HZ` to be an integer multiple of
 ```json
 {
   "writes": [
-    { "0x00": 89, "0x01": 2, "0x02": 1, "wait_ms": 250 },
-    { "0x00": 202, "0x01": 2, "wait_ms": 250 },
-    { "0x00": 132, "0x01": 3, "wait_ms": 250 },
-    { "0x02": 0 }
+    { "r00": 89, "r01": 2, "r02": 1, "wait_ms": 250 },
+    { "r00": 202, "r01": 2, "wait_ms": 250 },
+    { "r00": 132, "r01": 3, "wait_ms": 250 },
+    { "r02": 0 }
   ]
 }
 ```
 
 Within each block, keys are processed in order. Register keys emit writes on
 consecutive simulator clocks; `wait_ms` and `wait_cycles` advance the cursor.
-The older absolute form still works: `{ "time_ms": 250, "addr": 0, "data": 202 }`.
+Register keys may be `r00` through `r3F`, `0x00` through `0x3F`, or decimal
+strings. The older absolute form still works:
+`{ "time_ms": 250, "addr": 0, "data": 202 }`.
 
 To run gatelevel simulation, first harden your project and copy `../runs/wokwi/results/final/verilog/gl/{your_module_name}.v` to `gate_level_netlist.v`.
 

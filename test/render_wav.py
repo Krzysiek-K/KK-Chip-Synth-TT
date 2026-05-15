@@ -16,6 +16,10 @@ DEFAULT_WAV = "chipsynth_render.wav"
 DEFAULT_CLOCK_HZ = 48_000
 DEFAULT_SAMPLE_RATE_HZ = 48_000
 
+# Future friendly: add aliases such as "freq_lo": 0x00 here when the register
+# map settles.
+REGISTER_NAMES = {}
+
 
 def _load_sequence():
     path = Path(os.environ.get("AUDIO_SEQUENCE", DEFAULT_SEQUENCE))
@@ -55,8 +59,29 @@ def _cycles_from_ms(time_ms, clock_hz):
     return round((float(time_ms) / 1000.0) * clock_hz)
 
 
+def _register_addr_from_key(key):
+    if key in REGISTER_NAMES:
+        addr = REGISTER_NAMES[key]
+    elif key.startswith(("0x", "0X")) or key.isdigit():
+        addr = _parse_int(key)
+    elif len(key) == 3 and key[0] in ("r", "R"):
+        addr = int(key[1:], 16)
+    else:
+        raise ValueError(f"Unknown register key {key!r}")
+
+    if not 0 <= addr <= 0x3F:
+        raise ValueError(f"Register address out of range: {key!r}")
+
+    return addr
+
+
 def _is_register_key(key):
-    return key.startswith(("0x", "0X")) or key.isdigit()
+    try:
+        _register_addr_from_key(key)
+    except ValueError:
+        return False
+
+    return True
 
 
 def _absolute_write_cycle(write, clock_hz):
@@ -95,7 +120,7 @@ def _normalize_writes(sequence_writes, clock_hz):
                 writes.append(
                     {
                         "cycle": cursor_cycle,
-                        "addr": _parse_int(key),
+                        "addr": _register_addr_from_key(key),
                         "data": _parse_int(value),
                     }
                 )
