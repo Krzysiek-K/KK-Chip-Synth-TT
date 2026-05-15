@@ -79,9 +79,7 @@ module tt_um_KK_ChipSynth (
       .write_PER(write_PER0),
       .prescaler_src(prescaler_src),
       .square_out(square_out[0]),
-      .selected_prescaler_clk(channel_clk0),
-      .divider_reset(),
-      .prescaler_select()
+      .selected_prescaler_clk(channel_clk0)
   );
 
   synth_divider voice1 (
@@ -90,9 +88,7 @@ module tt_um_KK_ChipSynth (
       .write_PER(write_PER1),
       .prescaler_src(prescaler_src),
       .square_out(square_out[1]),
-      .selected_prescaler_clk(channel_clk1),
-      .divider_reset(),
-      .prescaler_select()
+      .selected_prescaler_clk(channel_clk1)
   );
 
   synth_divider voice2 (
@@ -101,9 +97,7 @@ module tt_um_KK_ChipSynth (
       .write_PER(write_PER2),
       .prescaler_src(prescaler_src),
       .square_out(square_out[2]),
-      .selected_prescaler_clk(channel_clk2),
-      .divider_reset(),
-      .prescaler_select()
+      .selected_prescaler_clk(channel_clk2)
   );
 
   synth_divider voice3 (
@@ -112,9 +106,7 @@ module tt_um_KK_ChipSynth (
       .write_PER(write_PER3),
       .prescaler_src(prescaler_src),
       .square_out(square_out[3]),
-      .selected_prescaler_clk(channel_clk3),
-      .divider_reset(),
-      .prescaler_select()
+      .selected_prescaler_clk(channel_clk3)
   );
 
   synth_mixer mixer (

@@ -11,9 +11,7 @@ module synth_divider (
     input  wire       write_PER,
     input  wire [7:0] prescaler_src,
     output wire       square_out,
-    output wire       selected_prescaler_clk,
-    output wire       divider_reset,
-    output wire [2:0] prescaler_select
+    output wire       selected_prescaler_clk
 );
 
   reg [3:0] reg_CTRL;
@@ -29,8 +27,8 @@ module synth_divider (
     reg_PER <= bus_data;
   end
 
-  assign prescaler_select       = reg_CTRL[2:0];
-  assign divider_reset          = reg_CTRL[3];
+  wire [2:0] prescaler_select = reg_CTRL[2:0];
+  wire       divider_reset    = reg_CTRL[3];
 
   // This mux output clocks the timer counter and must remain visible to STA/CTS.
   (* keep = "true" *) wire prescaler_mux_clk;
