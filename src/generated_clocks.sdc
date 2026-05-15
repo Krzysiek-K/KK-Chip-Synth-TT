@@ -106,8 +106,12 @@ set chipsynth_main_clk_pin [get_ports $clock_port]
 # The selected prescaler clock is muxed by stable control register bits. The
 # fastest selection is shared_clk_div[6], i.e. clk divided by 128. Slower
 # selections are intentionally over-constrained by this clock.
+#
+# After synthesis, the timer flops are clocked by the kept top-level
+# divider_clk net. The internal prescaler_mux_clk name may sit behind a
+# preservation buffer, so it is not a reliable clock-pin root for STA coverage.
 chipsynth_generated_clock chipsynth_divider_clk $chipsynth_main_clk_pin $clock_port 128 9 {
-    *voice0.prescaler_mux_clk*
+    divider_clk
 }
 
 # These write strobes intentionally remain small unbuffered helper-register
