@@ -107,32 +107,32 @@ set chipsynth_main_clk_pin [get_ports $clock_port]
 # fastest selection is shared_clk_div[6], i.e. clk divided by 128. Slower
 # selections are intentionally over-constrained by this clock.
 #
-# After synthesis, the timer flops are clocked by kept top-level divider clock
-# nets. The internal prescaler_mux_clk names may sit behind a
-# preservation buffer, so it is not a reliable clock-pin root for STA coverage.
+# After synthesis, the timer flops are clocked directly by the kept internal
+# mux clock nets. These are the race-sensitive counter clocks that need CTS
+# and STA coverage.
 chipsynth_generated_clock chipsynth_channel_clk0 $chipsynth_main_clk_pin $clock_port 128 9 {
-    channel_clk0
+    *channel0.divider.prescaler_mux_clk*
 }
 chipsynth_generated_clock chipsynth_channel_mclk0 $chipsynth_main_clk_pin $clock_port 128 9 {
-    channel_mclk0
+    *channel0.mdivider.prescaler_mux_clk*
 }
 chipsynth_generated_clock chipsynth_channel_clk1 $chipsynth_main_clk_pin $clock_port 128 9 {
-    channel_clk1
+    *channel1.divider.prescaler_mux_clk*
 }
 chipsynth_generated_clock chipsynth_channel_mclk1 $chipsynth_main_clk_pin $clock_port 128 9 {
-    channel_mclk1
+    *channel1.mdivider.prescaler_mux_clk*
 }
 chipsynth_generated_clock chipsynth_channel_clk2 $chipsynth_main_clk_pin $clock_port 128 9 {
-    channel_clk2
+    *channel2.divider.prescaler_mux_clk*
 }
 chipsynth_generated_clock chipsynth_channel_mclk2 $chipsynth_main_clk_pin $clock_port 128 9 {
-    channel_mclk2
+    *channel2.mdivider.prescaler_mux_clk*
 }
 chipsynth_generated_clock chipsynth_channel_clk3 $chipsynth_main_clk_pin $clock_port 128 9 {
-    channel_clk3
+    *channel3.divider.prescaler_mux_clk*
 }
 chipsynth_generated_clock chipsynth_channel_mclk3 $chipsynth_main_clk_pin $clock_port 128 9 {
-    channel_mclk3
+    *channel3.mdivider.prescaler_mux_clk*
 }
 
 # These write strobes intentionally remain small unbuffered helper-register

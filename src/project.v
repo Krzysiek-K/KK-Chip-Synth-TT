@@ -69,25 +69,13 @@ module tt_um_KK_ChipSynth (
   wire [1:0] channel_select;
   wire       audio_out;
 
-  // Generated clock roots for the divider timers; constrained in generated_clocks.sdc.
-  (* keep = "true" *) wire channel_clk0;
-  (* keep = "true" *) wire channel_mclk0;
-  (* keep = "true" *) wire channel_clk1;
-  (* keep = "true" *) wire channel_mclk1;
-  (* keep = "true" *) wire channel_clk2;
-  (* keep = "true" *) wire channel_mclk2;
-  (* keep = "true" *) wire channel_clk3;
-  (* keep = "true" *) wire channel_mclk3;
-
   synth_channel channel0 (
       .bus_data(bus_data),
       .write_channel(write_channel[0]),
       .write_function(write_function),
       .write_subreg(write_subreg),
       .prescaler_src(prescaler_src),
-      .square_out(square_out[0]),
-      .selected_prescaler_clk(channel_clk0),
-      .selected_mprescaler_clk(channel_mclk0)
+      .square_out(square_out[0])
   );
 
   synth_channel channel1 (
@@ -96,9 +84,7 @@ module tt_um_KK_ChipSynth (
       .write_function(write_function),
       .write_subreg(write_subreg),
       .prescaler_src(prescaler_src),
-      .square_out(square_out[1]),
-      .selected_prescaler_clk(channel_clk1),
-      .selected_mprescaler_clk(channel_mclk1)
+      .square_out(square_out[1])
   );
 
   synth_channel channel2 (
@@ -107,9 +93,7 @@ module tt_um_KK_ChipSynth (
       .write_function(write_function),
       .write_subreg(write_subreg),
       .prescaler_src(prescaler_src),
-      .square_out(square_out[2]),
-      .selected_prescaler_clk(channel_clk2),
-      .selected_mprescaler_clk(channel_mclk2)
+      .square_out(square_out[2])
   );
 
   synth_channel channel3 (
@@ -118,9 +102,7 @@ module tt_um_KK_ChipSynth (
       .write_function(write_function),
       .write_subreg(write_subreg),
       .prescaler_src(prescaler_src),
-      .square_out(square_out[3]),
-      .selected_prescaler_clk(channel_clk3),
-      .selected_mprescaler_clk(channel_mclk3)
+      .square_out(square_out[3])
   );
 
   synth_mixer mixer (
@@ -146,14 +128,6 @@ module tt_um_KK_ChipSynth (
   // List all unused inputs to prevent warnings.
   wire _unused = &{
     ena,
-    channel_clk0,
-    channel_mclk0,
-    channel_clk1,
-    channel_mclk1,
-    channel_clk2,
-    channel_mclk2,
-    channel_clk3,
-    channel_mclk3,
     1'b0
   };
 

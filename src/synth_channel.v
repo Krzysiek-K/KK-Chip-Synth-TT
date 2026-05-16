@@ -11,9 +11,7 @@ module synth_channel (
     input  wire [3:0] write_function,
     input  wire [3:0] write_subreg,
     input  wire [7:0] prescaler_src,
-    output wire       square_out,
-    output wire       selected_prescaler_clk,
-    output wire       selected_mprescaler_clk
+    output wire       square_out
 );
 
   wire write_CTRL  = write_channel & write_function[0] & write_subreg[0];
@@ -34,8 +32,7 @@ module synth_channel (
       .prescaler_src(prescaler_src),
       .hardsync_in(mdivider_compare),
       .square_out(divider_out),
-      .compare_out(divider_compare),
-      .selected_prescaler_clk(selected_prescaler_clk)
+      .compare_out(divider_compare)
   );
 
   synth_divider mdivider (
@@ -45,8 +42,7 @@ module synth_channel (
       .prescaler_src(prescaler_src),
       .hardsync_in(divider_compare),
       .square_out(mdivider_out),
-      .compare_out(mdivider_compare),
-      .selected_prescaler_clk(selected_mprescaler_clk)
+      .compare_out(mdivider_compare)
   );
 
   assign square_out = ~(divider_out & mdivider_out);
