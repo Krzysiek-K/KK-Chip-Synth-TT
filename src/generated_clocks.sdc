@@ -48,6 +48,18 @@ proc chipsynth_net_checked {name patterns} {
     return [lindex $nets 0]
 }
 
+proc chipsynth_nets_checked_nonempty {name patterns} {
+    set nets [chipsynth_nets $patterns]
+    set count [llength $nets]
+    puts "\[INFO] ChipSynth $name matched $count net(s)."
+    if { $count < 1 } {
+        puts "\[ERROR] ChipSynth $name patterns: $patterns"
+        puts "\[ERROR] ChipSynth $name net matches: $nets"
+        error "ChipSynth $name expected at least one net, got $count."
+    }
+    return $nets
+}
+
 proc chipsynth_clocked_clock_pins {} {
     set pins {}
     foreach clock [all_clocks] {
@@ -70,14 +82,14 @@ proc chipsynth_clock_pins_on_net {net} {
 }
 
 proc chipsynth_generated_clock {name source master divide expected_sinks patterns} {
-    set target [chipsynth_net_checked $name $patterns]
+    set targets [chipsynth_nets_checked_nonempty $name $patterns]
 
     create_generated_clock \
         -name $name \
         -source $source \
         -master_clock $master \
         -divide_by $divide \
-        $target
+        $targets
 
     set clock [get_clocks -quiet $name]
     set clock_pins [all_registers -clock $clock -clock_pins]
