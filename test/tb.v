@@ -22,10 +22,28 @@ module tb ();
   wire [7:0] uo_out;
   wire [7:0] uio_out;
   wire [7:0] uio_oe;
+  reg [5:0] audio_box_phase;
+  reg [6:0] audio_box_accum;
+  reg [6:0] audio_sum64;
 `ifdef GL_TEST
   wire VPWR = 1'b1;
   wire VGND = 1'b0;
 `endif
+
+  always @(posedge clk) begin
+    if (!rst_n) begin
+      audio_box_phase <= 6'h00;
+      audio_box_accum <= 7'h00;
+      audio_sum64     <= 7'h00;
+    end else if (audio_box_phase == 6'd63) begin
+      audio_sum64     <= audio_box_accum + (uo_out[7] === 1'b1);
+      audio_box_accum <= 7'h00;
+      audio_box_phase <= 6'h00;
+    end else begin
+      audio_box_accum <= audio_box_accum + (uo_out[7] === 1'b1);
+      audio_box_phase <= audio_box_phase + 6'h01;
+    end
+  end
 
   tt_um_KK_ChipSynth user_project (
 

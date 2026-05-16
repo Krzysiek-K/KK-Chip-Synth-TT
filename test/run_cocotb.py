@@ -49,13 +49,23 @@ def main():
 
     _configure_windows_environment()
 
+    if args.target == "render-wav":
+        from render_model_wav import main as render_model_wav
+
+        os.environ.setdefault("AUDIO_SEQUENCE", str(TEST_DIR / "audio_sequence.json"))
+        os.environ.setdefault("AUDIO_WAV", str(TEST_DIR / "chipsynth_render.wav"))
+        os.environ.setdefault("SIM_CLOCK_HZ", "3072000")
+        os.environ.setdefault("AUDIO_SAMPLE_RATE", "48000")
+        render_model_wav()
+        return
+
     test_module = "render_wav" if args.target == "render-wav" else "test"
     build_dir = TEST_DIR / "sim_build" / "runner"
 
     if args.target == "render-wav":
         os.environ.setdefault("AUDIO_SEQUENCE", str(TEST_DIR / "audio_sequence.json"))
         os.environ.setdefault("AUDIO_WAV", str(TEST_DIR / "chipsynth_render.wav"))
-        os.environ.setdefault("SIM_CLOCK_HZ", "196608")
+        os.environ.setdefault("SIM_CLOCK_HZ", "3072000")
         os.environ.setdefault("AUDIO_SAMPLE_RATE", "48000")
 
     runner = get_runner(os.environ.get("SIM", "icarus"))

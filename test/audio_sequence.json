@@ -1,5 +1,5 @@
 {
-  "clock_hz": 196608,
+  "clock_hz": 3072000,
   "sample_rate_hz": 48000,
   "duration_ms": 760,
   "output_wav": "chipsynth_render.wav",

@@ -129,7 +129,7 @@ module tt_um_KK_ChipSynth (
       .write_function(write_function),
       .write_subreg(write_subreg),
       .square_in(square_out),
-      .fast_counter(prescaler_src[5:0]),
+      .fast_counter(shared_clk_div[5:0]),
       .channel_out(channel_out),
       .channel_select(channel_select),
       .audio_out(audio_out)
@@ -144,6 +144,17 @@ module tt_um_KK_ChipSynth (
   assign uo_out[2:0] = {reg_GCTRL, channel_select};
 
   // List all unused inputs to prevent warnings.
-  wire _unused = &{ena, 1'b0};
+  wire _unused = &{
+    ena,
+    channel_clk0,
+    channel_mclk0,
+    channel_clk1,
+    channel_mclk1,
+    channel_clk2,
+    channel_mclk2,
+    channel_clk3,
+    channel_mclk3,
+    1'b0
+  };
 
 endmodule

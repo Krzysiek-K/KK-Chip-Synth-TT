@@ -8,13 +8,13 @@ from pathlib import Path
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge, Timer
+from cocotb.triggers import ClockCycles, ReadOnly, RisingEdge, Timer
 
 
 DEFAULT_SEQUENCE = "audio_sequence.json"
 DEFAULT_WAV = "chipsynth_render.wav"
-DEFAULT_CLOCK_HZ = 196_608
 DEFAULT_SAMPLE_RATE_HZ = 48_000
+DEFAULT_CLOCK_HZ = DEFAULT_SAMPLE_RATE_HZ * 64
 
 REGISTER_NAMES = {
     "GCTRL": 0x3F,
@@ -63,6 +63,11 @@ def _write_wav(path, sample_rate_hz, samples):
 
 def _sample_from_bit(audio_bit):
     return 32767 if audio_bit else -32767
+
+
+def _sample_from_level(level, max_level):
+    scaled = (2.0 * (float(level) / float(max_level))) - 1.0
+    return round(max(-1.0, min(1.0, scaled)) * 32767)
 
 
 def _parse_int(value):
@@ -206,15 +211,30 @@ async def render_wav(dut):
     dut.rst_n.value = 1
     cocotb.start_soon(_drive_writes(dut, writes))
 
-    sample_period_ps = 1_000_000_000_000 / sample_rate_hz
-    elapsed_ps = 0
+    if clock_hz == sample_rate_hz * 64:
+        dut._log.info("Using 64-cycle box-filtered audio samples")
+        sample_period_ps = round(1_000_000_000_000 / sample_rate_hz)
+        for _ in range(total_samples):
+            await Timer(sample_period_ps, unit="ps")
+            await ReadOnly()
+            audio_level = dut.audio_sum64.value
+            samples.append(
+                _sample_from_level(int(audio_level) if audio_level.is_resolvable else 0, 64)
+            )
+    else:
+        dut._log.warning(
+            "Using point-sampled audio. Set SIM_CLOCK_HZ to AUDIO_SAMPLE_RATE*64 "
+            "for anti-aliased mixer-frame rendering."
+        )
+        sample_period_ps = 1_000_000_000_000 / sample_rate_hz
+        elapsed_ps = 0
 
-    for sample_index in range(total_samples):
-        next_elapsed_ps = round((sample_index + 1) * sample_period_ps)
-        await Timer(next_elapsed_ps - elapsed_ps, unit="ps")
-        elapsed_ps = next_elapsed_ps
-        audio_bit = dut.uo_out.value[7]
-        samples.append(_sample_from_bit(int(audio_bit) if audio_bit.is_resolvable else 0))
+        for sample_index in range(total_samples):
+            next_elapsed_ps = round((sample_index + 1) * sample_period_ps)
+            await Timer(next_elapsed_ps - elapsed_ps, unit="ps")
+            elapsed_ps = next_elapsed_ps
+            audio_bit = dut.uo_out.value[7]
+            samples.append(_sample_from_bit(int(audio_bit) if audio_bit.is_resolvable else 0))
 
     _write_wav(wav_path, sample_rate_hz, samples)
     dut._log.info("Wrote %s", wav_path)

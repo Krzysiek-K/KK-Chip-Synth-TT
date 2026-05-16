@@ -56,10 +56,10 @@ divider increments on the selected prescaler edge. When the counter equals the
 period register, the counter returns to zero and the divider square output
 toggles, unless reset or hard-sync reset is active.
 
-For `VOLx`, bits `[3:0]` mask the mixer volume gates. `VOLx[3]` enables a
-1/2-duty gate, `VOLx[2]` enables 1/4 duty, `VOLx[1]` enables 1/8 duty, and
-`VOLx[0]` enables 1/16 duty. The gate source is the shared fast prescaler
-counter, so amplitude chopping is independent of note period.
+For `VOLx`, bits `[3:0]` set the mixer volume from `0` to `15`. The mixer
+compares a 4-bit phase derived from the shared fast counter with `VOLx`, so a
+raw-high channel contributes `VOLx` high bits during each 16-slot channel
+volume frame. `VOLx = 0` is silent and `VOLx = 15` is 15/16 duty.
 
 For `GCTRL`, bit `0` is active-low `/reset`. Write `0` to hold the shared
 prescaler reset and `1` to release it. `GCTRL` does not gate register writes or
@@ -71,13 +71,14 @@ control register, then divides it with its period register. `synth_channel`
 wraps two such dividers, cross-wires their hard-sync compare outputs, and NANDs
 their square outputs.
 
-The mixer receives the six fastest shared prescaler counter bits as
-`fast_counter[5:0]`. It derives four volume gate bits from those shared counter
-bits, gates each raw channel with `channel_out & |(volume_gate & VOLx[3:0])`,
-then multiplexes the four gated channels onto `uo_out[7]`. The mux select is
-`fast_counter[1:0] ^ fast_counter[5:4]` to switch quickly between channels
-while decorrelating the volume gates. `uo_out[6:3]` exposes the four gated
-channels directly for optional external mixing.
+The mixer receives the six fastest shared clock-divider bits as
+`fast_counter[5:0]`. It uses `fast_counter[5:2]` as the 4-bit volume phase and
+`fast_counter[1:0] ^ fast_counter[5:4]` as the channel mux select. Across any
+complete 64-clock mixer frame, each channel is selected for 16 clocks and sees
+all 16 volume phases exactly once. Therefore the average of `uo_out[7]` over
+one mixer frame is `(ch0*VOL0 + ch1*VOL1 + ch2*VOL2 + ch3*VOL3) / 64`, where
+`chx` is that channel's raw NANDed divider output. `uo_out[6:3]` exposes the
+four volume-gated channel outputs directly for optional external mixing.
 
 The shared divider uses ordinary `posedge clk` registers; reset is applied
 through the D input so a clock edge while `/reset` is low clears the divider

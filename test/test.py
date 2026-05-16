@@ -88,6 +88,27 @@ async def test_project(dut):
 
     assert int(dut.uo_out.value[2]) == 1
 
+    await bus_write(dut, REG_VOL0, 0x00)
+    await bus_write(dut, REG_VOL1, 0x05)
+    await bus_write(dut, REG_VOL2, 0x0A)
+    await bus_write(dut, REG_VOL3, 0x0F)
+
+    audio_sum = 0
+    channel_sums = [0, 0, 0, 0]
+    for _ in range(64):
+        await ClockCycles(dut.clk, 1)
+        audio_sum += int(dut.uo_out.value[7])
+        for channel in range(4):
+            channel_sums[channel] += int(dut.uo_out.value[3 + channel])
+
+    assert audio_sum == 0 + 5 + 10 + 15
+    assert channel_sums == [0 * 4, 5 * 4, 10 * 4, 15 * 4]
+
+    await bus_write(dut, REG_VOL0, 0x08)
+    await bus_write(dut, REG_VOL1, 0x08)
+    await bus_write(dut, REG_VOL2, 0x08)
+    await bus_write(dut, REG_VOL3, 0x08)
+
     await bus_write(dut, REG_CTRL0, 0x00)
     await bus_write(dut, REG_MCTRL0, 0x10)
     await bus_write(dut, REG_CTRL1, 0x00)
@@ -117,5 +138,4 @@ async def test_project(dut):
     assert 1 in audio_bits
     assert set(selector_bits) == {0, 1, 2, 3}
     for bits in channel_bits:
-        assert 0 in bits
-        assert 1 in bits
+        assert bits

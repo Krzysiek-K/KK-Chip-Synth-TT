@@ -78,9 +78,13 @@ $env:AUDIO_WAV = "my_render.wav"
 make render-wav
 ```
 
-The renderer defaults to a 196.608 kHz preview clock so long WAV renders stay
-fast. Override `SIM_CLOCK_HZ` for shorter cycle-accurate experiments at the
-real 50 MHz chip clock.
+The default WAV helper uses a fast cycle model of the RTL and defaults to a
+3.072 MHz preview clock, exactly `48 kHz * 64`. Each WAV sample is an average
+over the simulated chip clocks in that sample period, so the 1-bit mixer PWM is
+low-pass filtered instead of point-sampled. The cocotb RTL test separately
+checks that the Verilog mixer has the expected 64-clock average. Override
+`SIM_CLOCK_HZ` for shorter experiments or slower experiments at the real
+50 MHz chip clock.
 
 `audio_sequence.json` supports compact ordered write blocks:
 

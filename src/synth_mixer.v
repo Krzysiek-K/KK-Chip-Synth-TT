@@ -26,7 +26,13 @@ module synth_mixer (
   wire write_VOL1 = write_channel[1] & write_function[2] & write_subreg[0];
   wire write_VOL2 = write_channel[2] & write_function[2] & write_subreg[0];
   wire write_VOL3 = write_channel[3] & write_function[2] & write_subreg[0];
-  wire _unused = &{write_function[3], write_function[1:0], write_subreg[3:1], 1'b0};
+  wire _unused = &{
+    bus_data[7:4],
+    write_function[3],
+    write_function[1:0],
+    write_subreg[3:1],
+    1'b0
+  };
 
   always @(posedge write_VOL0) begin
     reg_VOL0 <= bus_data[3:0];
@@ -44,17 +50,12 @@ module synth_mixer (
     reg_VOL3 <= bus_data[3:0];
   end
 
-  wire [3:0] volume_gate = {
-    fast_counter[0],
-    &fast_counter[1:0],
-    &fast_counter[2:0],
-    &fast_counter[3:0]
-  };
+  wire [3:0] volume_phase = fast_counter[5:2];
 
-  assign channel_out[0] = square_in[0] & |(volume_gate & reg_VOL0);
-  assign channel_out[1] = square_in[1] & |(volume_gate & reg_VOL1);
-  assign channel_out[2] = square_in[2] & |(volume_gate & reg_VOL2);
-  assign channel_out[3] = square_in[3] & |(volume_gate & reg_VOL3);
+  assign channel_out[0] = square_in[0] & (volume_phase < reg_VOL0);
+  assign channel_out[1] = square_in[1] & (volume_phase < reg_VOL1);
+  assign channel_out[2] = square_in[2] & (volume_phase < reg_VOL2);
+  assign channel_out[3] = square_in[3] & (volume_phase < reg_VOL3);
 
   assign channel_select = fast_counter[1:0] ^ fast_counter[5:4];
   assign audio_out = channel_out[channel_select];
