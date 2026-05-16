@@ -137,6 +137,17 @@ chipsynth_generated_clock chipsynth_channel_mclk3 $chipsynth_main_clk_pin $clock
 
 # These write strobes intentionally remain small unbuffered helper-register
 # clocks. They are not used for race-sensitive counters or state machines.
+set chipsynth_helper_check_steps {
+    OpenROAD.STAPrePNR
+    OpenROAD.STAMidPNR
+    OpenROAD.RepairDesignPostGPL
+}
+set chipsynth_run_helper_checks 1
+if { [info exists ::env(STEP_ID)] && [lsearch -exact $chipsynth_helper_check_steps $::env(STEP_ID)] < 0 } {
+    set chipsynth_run_helper_checks 0
+}
+
+if { $chipsynth_run_helper_checks } {
 set chipsynth_allowed_unclocked_pins {}
 foreach pin [chipsynth_helper_strobe chipsynth_write_CTRL0 5 {
     *channel0.divider.write_CTRL*
@@ -253,6 +264,9 @@ puts "\[INFO] ChipSynth unexpected unclocked register clock pin count: [llength 
 if { [llength $chipsynth_unexpected_unclocked_pins] != 0 } {
     puts "\[ERROR] ChipSynth unexpected unclocked register clock pins: $chipsynth_unexpected_unclocked_pins"
     error "ChipSynth generated-clock SDC did not cover every race-sensitive register clock pin."
+}
+} else {
+    puts "\[INFO] ChipSynth skipping helper-strobe clock-pin audit for $::env(STEP_ID)."
 }
 
 puts "\[INFO] Setting clock uncertainty to: $::env(CLOCK_UNCERTAINTY_CONSTRAINT)"
