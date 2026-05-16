@@ -151,7 +151,6 @@ chipsynth_generated_clock chipsynth_channel_mclk3 $chipsynth_main_clk_pin $clock
 # clocks. They are not used for race-sensitive counters or state machines.
 set chipsynth_helper_check_steps {
     OpenROAD.STAPrePNR
-    OpenROAD.STAMidPNR
     OpenROAD.RepairDesignPostGPL
 }
 set chipsynth_run_helper_checks 1
