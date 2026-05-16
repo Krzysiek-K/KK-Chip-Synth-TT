@@ -107,62 +107,114 @@ set chipsynth_main_clk_pin [get_ports $clock_port]
 # fastest selection is shared_clk_div[6], i.e. clk divided by 128. Slower
 # selections are intentionally over-constrained by this clock.
 #
-# After synthesis, the timer flops are clocked by kept top-level channel clock
+# After synthesis, the timer flops are clocked by kept top-level divider clock
 # nets. The internal prescaler_mux_clk names may sit behind a
 # preservation buffer, so it is not a reliable clock-pin root for STA coverage.
 chipsynth_generated_clock chipsynth_channel_clk0 $chipsynth_main_clk_pin $clock_port 128 9 {
     channel_clk0
 }
+chipsynth_generated_clock chipsynth_channel_mclk0 $chipsynth_main_clk_pin $clock_port 128 9 {
+    channel_mclk0
+}
 chipsynth_generated_clock chipsynth_channel_clk1 $chipsynth_main_clk_pin $clock_port 128 9 {
     channel_clk1
+}
+chipsynth_generated_clock chipsynth_channel_mclk1 $chipsynth_main_clk_pin $clock_port 128 9 {
+    channel_mclk1
 }
 chipsynth_generated_clock chipsynth_channel_clk2 $chipsynth_main_clk_pin $clock_port 128 9 {
     channel_clk2
 }
+chipsynth_generated_clock chipsynth_channel_mclk2 $chipsynth_main_clk_pin $clock_port 128 9 {
+    channel_mclk2
+}
 chipsynth_generated_clock chipsynth_channel_clk3 $chipsynth_main_clk_pin $clock_port 128 9 {
     channel_clk3
+}
+chipsynth_generated_clock chipsynth_channel_mclk3 $chipsynth_main_clk_pin $clock_port 128 9 {
+    channel_mclk3
 }
 
 # These write strobes intentionally remain small unbuffered helper-register
 # clocks. They are not used for race-sensitive counters or state machines.
 set chipsynth_allowed_unclocked_pins {}
-foreach pin [chipsynth_helper_strobe chipsynth_write_CTRL0 4 {
-    *voice0.write_CTRL*
+foreach pin [chipsynth_helper_strobe chipsynth_write_CTRL0 5 {
+    *channel0.write_CTRL*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
 foreach pin [chipsynth_helper_strobe chipsynth_write_PER0 8 {
-    *voice0.write_PER*
+    *channel0.write_PER*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
-foreach pin [chipsynth_helper_strobe chipsynth_write_CTRL1 4 {
-    *voice1.write_CTRL*
+foreach pin [chipsynth_helper_strobe chipsynth_write_MCTRL0 5 {
+    *channel0.write_MCTRL*
+}] {
+    lappend chipsynth_allowed_unclocked_pins $pin
+}
+foreach pin [chipsynth_helper_strobe chipsynth_write_MPER0 8 {
+    *channel0.write_MPER*
+}] {
+    lappend chipsynth_allowed_unclocked_pins $pin
+}
+foreach pin [chipsynth_helper_strobe chipsynth_write_CTRL1 5 {
+    *channel1.write_CTRL*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
 foreach pin [chipsynth_helper_strobe chipsynth_write_PER1 8 {
-    *voice1.write_PER*
+    *channel1.write_PER*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
-foreach pin [chipsynth_helper_strobe chipsynth_write_CTRL2 4 {
-    *voice2.write_CTRL*
+foreach pin [chipsynth_helper_strobe chipsynth_write_MCTRL1 5 {
+    *channel1.write_MCTRL*
+}] {
+    lappend chipsynth_allowed_unclocked_pins $pin
+}
+foreach pin [chipsynth_helper_strobe chipsynth_write_MPER1 8 {
+    *channel1.write_MPER*
+}] {
+    lappend chipsynth_allowed_unclocked_pins $pin
+}
+foreach pin [chipsynth_helper_strobe chipsynth_write_CTRL2 5 {
+    *channel2.write_CTRL*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
 foreach pin [chipsynth_helper_strobe chipsynth_write_PER2 8 {
-    *voice2.write_PER*
+    *channel2.write_PER*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
-foreach pin [chipsynth_helper_strobe chipsynth_write_CTRL3 4 {
-    *voice3.write_CTRL*
+foreach pin [chipsynth_helper_strobe chipsynth_write_MCTRL2 5 {
+    *channel2.write_MCTRL*
+}] {
+    lappend chipsynth_allowed_unclocked_pins $pin
+}
+foreach pin [chipsynth_helper_strobe chipsynth_write_MPER2 8 {
+    *channel2.write_MPER*
+}] {
+    lappend chipsynth_allowed_unclocked_pins $pin
+}
+foreach pin [chipsynth_helper_strobe chipsynth_write_CTRL3 5 {
+    *channel3.write_CTRL*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
 foreach pin [chipsynth_helper_strobe chipsynth_write_PER3 8 {
-    *voice3.write_PER*
+    *channel3.write_PER*
+}] {
+    lappend chipsynth_allowed_unclocked_pins $pin
+}
+foreach pin [chipsynth_helper_strobe chipsynth_write_MCTRL3 5 {
+    *channel3.write_MCTRL*
+}] {
+    lappend chipsynth_allowed_unclocked_pins $pin
+}
+foreach pin [chipsynth_helper_strobe chipsynth_write_MPER3 8 {
+    *channel3.write_MPER*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }

@@ -87,12 +87,13 @@ real 50 MHz chip clock.
 ```json
 {
   "writes": [
-    { "r00": 8, "r01": 0, "wait_ms": 2 },
-    { "r00": 0, "wait_ms": 248 },
-    { "r00": 8, "r01": 1, "wait_ms": 2 },
-    { "r00": 0, "wait_ms": 248 },
-    { "r00": 8, "r01": 2, "wait_ms": 2 },
-    { "r00": 0, "wait_ms": 248 }
+    { "GCTRL": 0 },
+    { "CTRL0": 8, "PER0": 2, "MCTRL0": 8, "MPER0": 3, "VOL0": 8 },
+    { "GCTRL": 1 },
+    { "wait_ms": 2 },
+    { "CTRL0": 0, "MCTRL0": 0, "wait_ms": 248 },
+    { "CTRL0": 8, "PER0": 3, "MCTRL0": 8, "MPER0": 5, "wait_ms": 2 },
+    { "CTRL0": 0, "MCTRL0": 16, "wait_ms": 248 }
   ]
 }
 ```
@@ -103,9 +104,10 @@ Register keys may be `r00` through `r3F`, `0x00` through `0x3F`, or decimal
 strings. The older absolute form still works:
 `{ "time_ms": 250, "addr": 0, "data": 202 }`.
 
-The current starter voice uses `r00` as a control register: bits `[2:0]`
-select the prescaler tap, and bit `3` holds output low and resets the timer on
-the next selected prescaler edge. `r01` is the 8-bit timer divider.
+Named register keys are also accepted: `GCTRL`, `CTRL0..CTRL3`, `PER0..PER3`,
+`MCTRL0..MCTRL3`, `MPER0..MPER3`, and `VOL0..VOL3`. `CTRLx`/`MCTRLx` bits
+`[2:0]` select the prescaler tap, bit `3` resets the divider on the next
+selected prescaler edge, and bit `4` enables hard sync from the paired divider.
 
 To run gatelevel simulation, first harden your project and copy `../runs/wokwi/results/final/verilog/gl/{your_module_name}.v` to `gate_level_netlist.v`.
 

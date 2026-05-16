@@ -62,6 +62,7 @@ def main():
     runner.build(
         sources=[
             SRC_DIR / "synth_divider.v",
+            SRC_DIR / "synth_channel.v",
             SRC_DIR / "synth_mixer.v",
             SRC_DIR / "project.v",
             TEST_DIR / "tb.v",

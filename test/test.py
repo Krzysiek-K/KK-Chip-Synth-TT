@@ -17,16 +17,24 @@ async def bus_write(dut, addr, data):
 REG_GCTRL = 0x3F
 REG_CTRL0 = 0x00
 REG_PER0 = 0x01
-REG_VOL0 = 0x02
-REG_CTRL1 = 0x04
-REG_PER1 = 0x05
-REG_VOL1 = 0x06
-REG_CTRL2 = 0x08
-REG_PER2 = 0x09
-REG_VOL2 = 0x0A
-REG_CTRL3 = 0x0C
-REG_PER3 = 0x0D
-REG_VOL3 = 0x0E
+REG_MCTRL0 = 0x04
+REG_MPER0 = 0x05
+REG_VOL0 = 0x08
+REG_CTRL1 = 0x10
+REG_PER1 = 0x11
+REG_MCTRL1 = 0x14
+REG_MPER1 = 0x15
+REG_VOL1 = 0x18
+REG_CTRL2 = 0x20
+REG_PER2 = 0x21
+REG_MCTRL2 = 0x24
+REG_MPER2 = 0x25
+REG_VOL2 = 0x28
+REG_CTRL3 = 0x30
+REG_PER3 = 0x31
+REG_MCTRL3 = 0x34
+REG_MPER3 = 0x35
+REG_VOL3 = 0x38
 
 
 @cocotb.test()
@@ -55,15 +63,23 @@ async def test_project(dut):
     # Voice registers must remain writable while the global prescaler reset is held.
     await bus_write(dut, REG_CTRL0, 0x08)
     await bus_write(dut, REG_PER0, 0x02)
+    await bus_write(dut, REG_MCTRL0, 0x08)
+    await bus_write(dut, REG_MPER0, 0x03)
     await bus_write(dut, REG_VOL0, 0x08)
     await bus_write(dut, REG_CTRL1, 0x08)
     await bus_write(dut, REG_PER1, 0x03)
+    await bus_write(dut, REG_MCTRL1, 0x08)
+    await bus_write(dut, REG_MPER1, 0x04)
     await bus_write(dut, REG_VOL1, 0x08)
     await bus_write(dut, REG_CTRL2, 0x08)
     await bus_write(dut, REG_PER2, 0x04)
+    await bus_write(dut, REG_MCTRL2, 0x08)
+    await bus_write(dut, REG_MPER2, 0x05)
     await bus_write(dut, REG_VOL2, 0x08)
     await bus_write(dut, REG_CTRL3, 0x08)
     await bus_write(dut, REG_PER3, 0x05)
+    await bus_write(dut, REG_MCTRL3, 0x08)
+    await bus_write(dut, REG_MPER3, 0x06)
     await bus_write(dut, REG_VOL3, 0x08)
     assert int(dut.uo_out.value[2]) == 0
 
@@ -73,9 +89,13 @@ async def test_project(dut):
     assert int(dut.uo_out.value[2]) == 1
 
     await bus_write(dut, REG_CTRL0, 0x00)
+    await bus_write(dut, REG_MCTRL0, 0x10)
     await bus_write(dut, REG_CTRL1, 0x00)
+    await bus_write(dut, REG_MCTRL1, 0x00)
     await bus_write(dut, REG_CTRL2, 0x00)
+    await bus_write(dut, REG_MCTRL2, 0x00)
     await bus_write(dut, REG_CTRL3, 0x00)
+    await bus_write(dut, REG_MCTRL3, 0x00)
 
     audio_bits = []
     channel_bits = [[], [], [], []]

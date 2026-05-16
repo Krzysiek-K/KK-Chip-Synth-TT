@@ -18,6 +18,7 @@ project:
   # Don't forget to also update `PROJECT_SOURCES` in test/Makefile.
   source_files:
     - "synth_divider.v"
+    - "synth_channel.v"
     - "synth_mixer.v"
     - "project.v"
 
@@ -35,13 +36,13 @@ pinout:
   ui[7]: "reg_data[7]"
 
   # Outputs
-  uo[0]: "debug/status[0]"
-  uo[1]: "debug/status[1]"
-  uo[2]: "debug/status[2]"
-  uo[3]: "debug/status[3]"
-  uo[4]: "debug/status[4]"
-  uo[5]: "debug/status[5]"
-  uo[6]: "debug/status[6]"
+  uo[0]: "channel_select[0]"
+  uo[1]: "channel_select[1]"
+  uo[2]: "GCTRL/reset_release"
+  uo[3]: "channel_out[0]"
+  uo[4]: "channel_out[1]"
+  uo[5]: "channel_out[2]"
+  uo[6]: "channel_out[3]"
   uo[7]: "audio_out"
 
   # Bidirectional pins
