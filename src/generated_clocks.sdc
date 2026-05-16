@@ -139,82 +139,82 @@ chipsynth_generated_clock chipsynth_channel_mclk3 $chipsynth_main_clk_pin $clock
 # clocks. They are not used for race-sensitive counters or state machines.
 set chipsynth_allowed_unclocked_pins {}
 foreach pin [chipsynth_helper_strobe chipsynth_write_CTRL0 5 {
-    *channel0.write_CTRL*
+    *channel0.divider.write_CTRL*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
 foreach pin [chipsynth_helper_strobe chipsynth_write_PER0 8 {
-    *channel0.write_PER*
+    *channel0.divider.write_PER*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
 foreach pin [chipsynth_helper_strobe chipsynth_write_MCTRL0 5 {
-    *channel0.write_MCTRL*
+    *channel0.mdivider.write_CTRL*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
 foreach pin [chipsynth_helper_strobe chipsynth_write_MPER0 8 {
-    *channel0.write_MPER*
+    *channel0.mdivider.write_PER*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
 foreach pin [chipsynth_helper_strobe chipsynth_write_CTRL1 5 {
-    *channel1.write_CTRL*
+    *channel1.divider.write_CTRL*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
 foreach pin [chipsynth_helper_strobe chipsynth_write_PER1 8 {
-    *channel1.write_PER*
+    *channel1.divider.write_PER*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
 foreach pin [chipsynth_helper_strobe chipsynth_write_MCTRL1 5 {
-    *channel1.write_MCTRL*
+    *channel1.mdivider.write_CTRL*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
 foreach pin [chipsynth_helper_strobe chipsynth_write_MPER1 8 {
-    *channel1.write_MPER*
+    *channel1.mdivider.write_PER*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
 foreach pin [chipsynth_helper_strobe chipsynth_write_CTRL2 5 {
-    *channel2.write_CTRL*
+    *channel2.divider.write_CTRL*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
 foreach pin [chipsynth_helper_strobe chipsynth_write_PER2 8 {
-    *channel2.write_PER*
+    *channel2.divider.write_PER*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
 foreach pin [chipsynth_helper_strobe chipsynth_write_MCTRL2 5 {
-    *channel2.write_MCTRL*
+    *channel2.mdivider.write_CTRL*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
 foreach pin [chipsynth_helper_strobe chipsynth_write_MPER2 8 {
-    *channel2.write_MPER*
+    *channel2.mdivider.write_PER*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
 foreach pin [chipsynth_helper_strobe chipsynth_write_CTRL3 5 {
-    *channel3.write_CTRL*
+    *channel3.divider.write_CTRL*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
 foreach pin [chipsynth_helper_strobe chipsynth_write_PER3 8 {
-    *channel3.write_PER*
+    *channel3.divider.write_PER*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
 foreach pin [chipsynth_helper_strobe chipsynth_write_MCTRL3 5 {
-    *channel3.write_MCTRL*
+    *channel3.mdivider.write_CTRL*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
 foreach pin [chipsynth_helper_strobe chipsynth_write_MPER3 8 {
-    *channel3.write_MPER*
+    *channel3.mdivider.write_PER*
 }] {
     lappend chipsynth_allowed_unclocked_pins $pin
 }
