@@ -91,9 +91,13 @@ Each selected prescaler tap is a generated clock for its divider period
 counter. `src/generated_clocks.sdc` makes all eight divider mux outputs checked
 generated clocks for LibreLane/OpenROAD, with exact sink-count checks so future
 race-sensitive state must either use a covered clock tree or add a new
-generated-clock constraint. The `/CS`, `/WR`, and address decode write strobes
-intentionally remain cheap helper-register clocks and are explicitly
-whitelisted by the SDC.
+generated-clock constraint. The SDC also checks the full register-clock budget:
+14 main-clocked shared-divider bits, 72 generated-clock divider state bits, and
+121 write-strobe helper/configuration bits. The `/CS`, `/WR`, and address
+decode write strobes intentionally remain cheap helper-register clocks and are
+explicitly whitelisted by the SDC. OpenROAD may still report those 121 pins as
+unclocked; that is expected only while the ChipSynth audit reports zero
+unexpected unclocked register pins.
 
 ## How to test
 

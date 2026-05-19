@@ -6,6 +6,26 @@
 
 source $::env(SCRIPTS_DIR)/base.sdc
 
+# Explicit register-clock contract for this revision.
+#
+# OpenROAD will still warn about the helper/config registers because their
+# clocks are intentionally decoded write strobes, not STA/CTS clocks. The
+# counts below make that warning actionable: exactly 121 helper/config pins are
+# allowed to be unclocked, and all counter-like state must be covered by the
+# main clock or by generated prescaler clocks.
+set chipsynth_expected_main_clock_pins 14
+set chipsynth_expected_generated_sinks_per_divider 9
+set chipsynth_expected_generated_clock_pins 72
+set chipsynth_expected_helper_strobe_pins 121
+set chipsynth_expected_all_register_clock_pins 207
+
+proc chipsynth_check_count {name actual expected} {
+    puts "\[INFO] ChipSynth $name: $actual, expected $expected."
+    if { $actual != $expected } {
+        error "ChipSynth $name expected $expected, got $actual."
+    }
+}
+
 proc chipsynth_unique {items} {
     set out {}
     foreach item $items {
@@ -99,6 +119,7 @@ proc chipsynth_generated_clock {name source master divide expected_sinks pattern
         puts "\[ERROR] ChipSynth generated clock $name clock pins: $clock_pins"
         error "ChipSynth generated clock $name expected $expected_sinks clock pin(s), got $clock_pin_count."
     }
+    return $clock_pins
 }
 
 proc chipsynth_helper_strobe {name expected_sinks patterns} {
@@ -121,31 +142,62 @@ set chipsynth_main_clk_pin [get_ports $clock_port]
 #
 # After synthesis, the timer flops are clocked directly by the kept internal
 # mux clock nets. These are the race-sensitive counter clocks that need CTS
-# and STA coverage.
-chipsynth_generated_clock chipsynth_channel_clk0 $chipsynth_main_clk_pin $clock_port 128 9 {
+# and STA coverage. Each divider generated clock must drive 8 counter flops
+# plus one square-output flop.
+set chipsynth_generated_counter_clock_pins {}
+foreach pin [chipsynth_generated_clock chipsynth_channel_clk0 $chipsynth_main_clk_pin $clock_port 128 $chipsynth_expected_generated_sinks_per_divider {
     *channel0.divider.prescaler_mux_clk*
+}] {
+    lappend chipsynth_generated_counter_clock_pins $pin
 }
-chipsynth_generated_clock chipsynth_channel_mclk0 $chipsynth_main_clk_pin $clock_port 128 9 {
+foreach pin [chipsynth_generated_clock chipsynth_channel_mclk0 $chipsynth_main_clk_pin $clock_port 128 $chipsynth_expected_generated_sinks_per_divider {
     *channel0.mdivider.prescaler_mux_clk*
+}] {
+    lappend chipsynth_generated_counter_clock_pins $pin
 }
-chipsynth_generated_clock chipsynth_channel_clk1 $chipsynth_main_clk_pin $clock_port 128 9 {
+foreach pin [chipsynth_generated_clock chipsynth_channel_clk1 $chipsynth_main_clk_pin $clock_port 128 $chipsynth_expected_generated_sinks_per_divider {
     *channel1.divider.prescaler_mux_clk*
+}] {
+    lappend chipsynth_generated_counter_clock_pins $pin
 }
-chipsynth_generated_clock chipsynth_channel_mclk1 $chipsynth_main_clk_pin $clock_port 128 9 {
+foreach pin [chipsynth_generated_clock chipsynth_channel_mclk1 $chipsynth_main_clk_pin $clock_port 128 $chipsynth_expected_generated_sinks_per_divider {
     *channel1.mdivider.prescaler_mux_clk*
+}] {
+    lappend chipsynth_generated_counter_clock_pins $pin
 }
-chipsynth_generated_clock chipsynth_channel_clk2 $chipsynth_main_clk_pin $clock_port 128 9 {
+foreach pin [chipsynth_generated_clock chipsynth_channel_clk2 $chipsynth_main_clk_pin $clock_port 128 $chipsynth_expected_generated_sinks_per_divider {
     *channel2.divider.prescaler_mux_clk*
+}] {
+    lappend chipsynth_generated_counter_clock_pins $pin
 }
-chipsynth_generated_clock chipsynth_channel_mclk2 $chipsynth_main_clk_pin $clock_port 128 9 {
+foreach pin [chipsynth_generated_clock chipsynth_channel_mclk2 $chipsynth_main_clk_pin $clock_port 128 $chipsynth_expected_generated_sinks_per_divider {
     *channel2.mdivider.prescaler_mux_clk*
+}] {
+    lappend chipsynth_generated_counter_clock_pins $pin
 }
-chipsynth_generated_clock chipsynth_channel_clk3 $chipsynth_main_clk_pin $clock_port 128 9 {
+foreach pin [chipsynth_generated_clock chipsynth_channel_clk3 $chipsynth_main_clk_pin $clock_port 128 $chipsynth_expected_generated_sinks_per_divider {
     *channel3.divider.prescaler_mux_clk*
+}] {
+    lappend chipsynth_generated_counter_clock_pins $pin
 }
-chipsynth_generated_clock chipsynth_channel_mclk3 $chipsynth_main_clk_pin $clock_port 128 9 {
+foreach pin [chipsynth_generated_clock chipsynth_channel_mclk3 $chipsynth_main_clk_pin $clock_port 128 $chipsynth_expected_generated_sinks_per_divider {
     *channel3.mdivider.prescaler_mux_clk*
+}] {
+    lappend chipsynth_generated_counter_clock_pins $pin
 }
+set chipsynth_generated_counter_clock_pins [chipsynth_unique $chipsynth_generated_counter_clock_pins]
+chipsynth_check_count "generated divider counter/square clock pin count" \
+    [llength $chipsynth_generated_counter_clock_pins] \
+    $chipsynth_expected_generated_clock_pins
+
+set chipsynth_main_clock_pins [all_registers -clock [get_clocks -quiet $clock_port] -clock_pins]
+chipsynth_check_count "main-clocked register clock pin count" \
+    [llength $chipsynth_main_clock_pins] \
+    $chipsynth_expected_main_clock_pins
+
+chipsynth_check_count "all register/latch clock pin count" \
+    [llength [all_registers -clock_pins]] \
+    $chipsynth_expected_all_register_clock_pins
 
 # These write strobes intentionally remain small unbuffered helper-register
 # clocks. They are not used for race-sensitive counters or state machines.
@@ -270,14 +322,18 @@ set chipsynth_allowed_unclocked_pins [chipsynth_unique $chipsynth_allowed_uncloc
 set chipsynth_clocked_pins [chipsynth_clocked_clock_pins]
 set chipsynth_unclocked_pins [chipsynth_without [all_registers -clock_pins] $chipsynth_clocked_pins]
 set chipsynth_unexpected_unclocked_pins [chipsynth_without $chipsynth_unclocked_pins $chipsynth_allowed_unclocked_pins]
-puts "\[INFO] ChipSynth allowed helper-strobe clock pin count: [llength $chipsynth_allowed_unclocked_pins]"
-puts "\[INFO] ChipSynth unexpected unclocked register clock pin count: [llength $chipsynth_unexpected_unclocked_pins]"
+chipsynth_check_count "allowed helper-strobe clock pin count" \
+    [llength $chipsynth_allowed_unclocked_pins] \
+    $chipsynth_expected_helper_strobe_pins
+chipsynth_check_count "unexpected unclocked register clock pin count" \
+    [llength $chipsynth_unexpected_unclocked_pins] \
+    0
 if { [llength $chipsynth_unexpected_unclocked_pins] != 0 } {
     puts "\[ERROR] ChipSynth unexpected unclocked register clock pins: $chipsynth_unexpected_unclocked_pins"
     error "ChipSynth generated-clock SDC did not cover every race-sensitive register clock pin."
 }
 } else {
-    puts "\[INFO] ChipSynth skipping helper-strobe clock-pin audit for $::env(STEP_ID)."
+    puts "\[INFO] ChipSynth skipping helper-strobe clock-pin audit for $::env(STEP_ID); aggregate register and generated-clock counts remain checked."
 }
 
 puts "\[INFO] Setting clock uncertainty to: $::env(CLOCK_UNCERTAINTY_CONSTRAINT)"
